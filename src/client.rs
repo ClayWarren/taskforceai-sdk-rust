@@ -1,5 +1,7 @@
 use crate::error::TaskForceAIError;
-use crate::types::{SubmitTaskResponse, TaskForceAIOptions, TaskStatus, TaskSubmissionOptions};
+use crate::types::{
+    SubmitTaskResponse, TaskForceAIOptions, TaskStatus, TaskStatusValue, TaskSubmissionOptions,
+};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -75,7 +77,10 @@ impl TaskForceAI {
         let status = response.status();
 
         if !status.is_success() {
-            let message = response.text().await.unwrap_or_default();
+            let message = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Failed to read error message from response body".to_string());
             return Err(TaskForceAIError::Api { status, message });
         }
 
@@ -112,9 +117,9 @@ impl TaskForceAI {
 
         let mut body = serde_json::json!({ "prompt": prompt });
         if let Some(opts) = options {
-            body.as_object_mut()
-                .unwrap()
-                .insert("options".to_string(), serde_json::to_value(opts)?);
+            if let Some(obj) = body.as_object_mut() {
+                obj.insert("options".to_string(), serde_json::to_value(opts)?);
+            }
         }
 
         let response: SubmitTaskResponse = self
@@ -142,13 +147,14 @@ impl TaskForceAI {
 
         for _ in 0..max {
             let status = self.get_task_status(task_id).await?;
-            if status.status == "completed" {
-                return Ok(status);
-            }
-            if status.status == "failed" {
-                return Err(TaskForceAIError::TaskFailed(
-                    status.error.unwrap_or_else(|| "Unknown error".to_string()),
-                ));
+            match status.status {
+                TaskStatusValue::Completed => return Ok(status),
+                TaskStatusValue::Failed => {
+                    return Err(TaskForceAIError::TaskFailed(
+                        status.error.unwrap_or_else(|| "Unknown error".to_string()),
+                    ))
+                }
+                TaskStatusValue::Processing => (),
             }
             sleep(interval).await;
         }
