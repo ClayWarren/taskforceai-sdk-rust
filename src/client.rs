@@ -47,7 +47,7 @@ impl TaskForceAI {
         })
     }
 
-    async fn request<T>(
+    pub(crate) async fn request<T>(
         &self,
         method: reqwest::Method,
         path: &str,
