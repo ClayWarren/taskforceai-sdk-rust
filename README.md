@@ -4,11 +4,17 @@ Official Rust SDK for the TaskForceAI multi-agent orchestration API.
 
 ## Installation
 
-Add this to your `Cargo.toml`:
+Install using `cargo`:
+
+```bash
+cargo add taskforceai-sdk
+```
+
+Or add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-taskforceai-sdk = { path = "../../packages/sdk-rust" } # Or version from crates.io once published
+taskforceai-sdk = "0.1.0"
 tokio = { version = "1.0", features = ["full"] }
 ```
 
