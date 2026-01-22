@@ -576,4 +576,255 @@ mod tests {
         // Mid-stream network error is hard to simulate with mockito reliably.
         // We've already verified the variant and other error paths.
     }
+
+    // --- Files Tests ---
+
+    #[tokio::test]
+    async fn test_upload_file() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/files")
+            .with_status(200)
+            .with_body(r#"{"id": "file-123", "filename": "test.txt", "purpose": "test", "bytes": 100, "created_at": 1672531200}"#)
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let opts = FileUploadOptions {
+            purpose: Some("test".to_string()),
+            mime_type: Some("text/plain".to_string()),
+        };
+        let file = client
+            .upload_file("test.txt", "content".as_bytes().to_vec().into(), Some(opts))
+            .await
+            .unwrap();
+        assert_eq!(file.id, "file-123");
+        assert_eq!(file.filename, "test.txt");
+    }
+
+    #[tokio::test]
+    async fn test_list_files() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/files?limit=10&offset=0")
+            .with_status(200)
+            .with_body(r#"{"files": [{"id": "file-1", "filename": "f1", "purpose": "p", "bytes": 10, "created_at": 1672531200}], "total": 1}"#)
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let res = client.list_files(10, 0).await.unwrap();
+        assert_eq!(res.files.len(), 1);
+        assert_eq!(res.total, 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_file() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/files/file-1")
+            .with_status(200)
+            .with_body(r#"{"id": "file-1", "filename": "f1", "purpose": "p", "bytes": 10, "created_at": 1672531200}"#)
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let file = client.get_file("file-1").await.unwrap();
+        assert_eq!(file.id, "file-1");
+    }
+
+    #[tokio::test]
+    async fn test_delete_file() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("DELETE", "/files/file-1")
+            .with_status(200)
+            .with_body("{}")
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        client.delete_file("file-1").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_download_file() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/files/file-1/content")
+            .with_status(200)
+            .with_body("file content")
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let bytes = client.download_file("file-1").await.unwrap();
+        assert_eq!(bytes, "file content".as_bytes());
+    }
+
+    // --- Threads Tests ---
+
+    #[tokio::test]
+    async fn test_create_thread() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/threads")
+            .with_status(200)
+            .with_body(r#"{"id": 1, "title": "My Thread", "created_at": 1672531200, "updated_at": 1672531200}"#)
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let opts = CreateThreadOptions {
+            title: Some("My Thread".to_string()),
+            ..Default::default()
+        };
+        let thread = client.create_thread(Some(opts)).await.unwrap();
+        assert_eq!(thread.id, 1);
+        assert_eq!(thread.title, "My Thread");
+    }
+
+    #[tokio::test]
+    async fn test_list_threads() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/threads?limit=10&offset=0")
+            .with_status(200)
+            .with_body(r#"{"threads": [{"id": 1, "title": "t1", "created_at": 1672531200, "updated_at": 1672531200}], "total": 1}"#)
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let res = client.list_threads(10, 0).await.unwrap();
+        assert_eq!(res.threads.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_get_thread() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/threads/1")
+            .with_status(200)
+            .with_body(r#"{"id": 1, "title": "t1", "created_at": 1672531200, "updated_at": 1672531200}"#)
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let thread = client.get_thread(1).await.unwrap();
+        assert_eq!(thread.id, 1);
+    }
+
+    #[tokio::test]
+    async fn test_delete_thread() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("DELETE", "/threads/1")
+            .with_status(200)
+            .with_body("{}")
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        client.delete_thread(1).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_get_thread_messages() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/threads/1/messages?limit=10&offset=0")
+            .with_status(200)
+            .with_body(r#"{"messages": [{"id": 100, "thread_id": 1, "role": "user", "content": "hi", "created_at": 1672531200}], "total": 1}"#)
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let res = client.get_thread_messages(1, 10, 0).await.unwrap();
+        assert_eq!(res.messages.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_run_in_thread() {
+        let mut server = Server::new_async().await;
+        let _mock = server
+            .mock("POST", "/threads/1/runs")
+            .with_status(200)
+            .with_body(r#"{"task_id": "task-t1", "thread_id": 1, "message_id": 101}"#)
+            .create_async()
+            .await;
+
+        let client = TaskForceAI::new(TaskForceAIOptions {
+            base_url: Some(server.url()),
+            api_key: Some("key".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+
+        let opts = ThreadRunOptions {
+            prompt: "run".to_string(),
+            ..Default::default()
+        };
+        let res = client.run_in_thread(1, opts).await.unwrap();
+        assert_eq!(res.task_id, "task-t1");
+    }
 }

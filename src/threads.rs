@@ -52,7 +52,7 @@ pub struct ThreadMessagesResponse {
 }
 
 /// Options for running a prompt in a thread.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ThreadRunOptions {
     pub prompt: String,
     #[serde(skip_serializing_if = "Option::is_none")]
