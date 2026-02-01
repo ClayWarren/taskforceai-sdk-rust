@@ -12,7 +12,9 @@ pub use threads::{
     CreateThreadOptions, Thread, ThreadListResponse, ThreadMessage, ThreadMessagesResponse,
     ThreadRunOptions, ThreadRunResponse,
 };
-pub use types::{TaskForceAIOptions, TaskStatus, TaskStatusValue, TaskSubmissionOptions};
+pub use types::{
+    ImageAttachment, TaskForceAIOptions, TaskStatus, TaskStatusValue, TaskSubmissionOptions,
+};
 
 #[cfg(test)]
 mod tests {

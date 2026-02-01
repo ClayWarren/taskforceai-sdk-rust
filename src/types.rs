@@ -13,6 +13,18 @@ pub struct TaskForceAIOptions {
     pub mock_mode: Option<bool>,
 }
 
+/// A base64-encoded image attachment to include with a task prompt.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImageAttachment {
+    /// Base64-encoded image data
+    pub data: String,
+    /// Image MIME type (e.g. "image/jpeg", "image/png")
+    pub mime_type: String,
+    /// Optional filename
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskSubmissionOptions {
@@ -24,6 +36,9 @@ pub struct TaskSubmissionOptions {
     pub mock: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vercel_ai_key: Option<String>,
+    /// Image attachments to include with the prompt
+    #[serde(skip)]
+    pub images: Option<Vec<ImageAttachment>>,
     #[serde(flatten)]
     pub additional_options: HashMap<String, serde_json::Value>,
 }

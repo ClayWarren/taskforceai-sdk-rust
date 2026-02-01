@@ -117,8 +117,14 @@ impl TaskForceAI {
 
         let mut body = serde_json::json!({ "prompt": prompt });
         if let Some(opts) = options {
+            let images = opts.images.clone();
             if let Some(obj) = body.as_object_mut() {
                 obj.insert("options".to_string(), serde_json::to_value(opts)?);
+                if let Some(imgs) = images {
+                    if !imgs.is_empty() {
+                        obj.insert("attachments".to_string(), serde_json::to_value(imgs)?);
+                    }
+                }
             }
         }
 

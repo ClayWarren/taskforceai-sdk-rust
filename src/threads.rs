@@ -76,7 +76,7 @@ impl TaskForceAI {
         options: Option<CreateThreadOptions>,
     ) -> Result<Thread, TaskForceAIError> {
         let body = options
-            .map(|o| serde_json::to_value(o))
+            .map(serde_json::to_value)
             .transpose()?
             .unwrap_or_else(|| serde_json::json!({}));
 
