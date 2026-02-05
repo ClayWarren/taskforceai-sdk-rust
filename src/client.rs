@@ -64,7 +64,7 @@ impl TaskForceAI {
         let mut request = self.client.request(method, &url);
 
         if !self.api_key.is_empty() {
-            request = request.bearer_auth(&self.api_key);
+            request = request.header("x-api-key", &self.api_key);
         }
 
         request = request.header("X-SDK-Language", "rust");
