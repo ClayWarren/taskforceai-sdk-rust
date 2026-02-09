@@ -23,6 +23,9 @@ pub struct ImageAttachment {
     /// Optional filename
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// Vision detail level: "auto", "low", or "high" (default: auto)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
