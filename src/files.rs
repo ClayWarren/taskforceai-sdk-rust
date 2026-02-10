@@ -57,13 +57,16 @@ impl TaskForceAI {
             if let Some(purpose) = opts.purpose {
                 form = form.text("purpose", purpose);
             }
+            if let Some(mime_type) = opts.mime_type {
+                form = form.text("mime_type", mime_type);
+            }
         }
 
         let url = format!("{}/files", self.base_url);
         let mut request = self.client.post(&url).multipart(form);
 
         if !self.api_key.is_empty() {
-            request = request.bearer_auth(&self.api_key);
+            request = request.header("x-api-key", &self.api_key);
         }
         request = request.header("X-SDK-Language", "rust");
 
@@ -110,7 +113,7 @@ impl TaskForceAI {
         let mut request = self.client.get(&url);
 
         if !self.api_key.is_empty() {
-            request = request.bearer_auth(&self.api_key);
+            request = request.header("x-api-key", &self.api_key);
         }
         request = request.header("X-SDK-Language", "rust");
 

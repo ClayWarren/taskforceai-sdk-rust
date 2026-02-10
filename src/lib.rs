@@ -21,7 +21,7 @@ mod tests {
     use super::*;
     use crate::client::{DEFAULT_BASE_URL, DEFAULT_TIMEOUT_SECS};
     use futures_util::StreamExt;
-    use mockito::Server;
+    use mockito::{Matcher, Server};
     use std::time::Duration;
 
     #[tokio::test]
@@ -152,6 +152,7 @@ mod tests {
     async fn test_stream_task_status() {
         let mut server = Server::new_async().await;
         let _mock = server.mock("GET", "/stream/task-1")
+            .match_header("x-api-key", "key")
             .with_status(200)
             .with_header("content-type", "text/event-stream")
             .with_body("data: {\"taskId\": \"task-1\", \"status\": \"processing\"}\ndata: {\"taskId\": \"task-1\", \"status\": \"completed\", \"result\": \"stream-done\"}\n")
@@ -586,6 +587,15 @@ mod tests {
         let mut server = Server::new_async().await;
         let _mock = server
             .mock("POST", "/files")
+            .match_header("x-api-key", "key")
+            .match_body(Matcher::Regex(
+                "(?s)Content-Disposition: form-data; name=\"purpose\".*\\r\\n\\r\\ntest\\r\\n"
+                    .to_string(),
+            ))
+            .match_body(Matcher::Regex(
+                "(?s)Content-Disposition: form-data; name=\"mime_type\".*\\r\\n\\r\\ntext/plain\\r\\n"
+                    .to_string(),
+            ))
             .with_status(200)
             .with_body(r#"{"id": "file-123", "filename": "test.txt", "purpose": "test", "bytes": 100, "created_at": 1672531200}"#)
             .create_async()
@@ -678,6 +688,7 @@ mod tests {
         let mut server = Server::new_async().await;
         let _mock = server
             .mock("GET", "/files/file-1/content")
+            .match_header("x-api-key", "key")
             .with_status(200)
             .with_body("file content")
             .create_async()
@@ -749,7 +760,9 @@ mod tests {
         let _mock = server
             .mock("GET", "/threads/1")
             .with_status(200)
-            .with_body(r#"{"id": 1, "title": "t1", "created_at": 1672531200, "updated_at": 1672531200}"#)
+            .with_body(
+                r#"{"id": 1, "title": "t1", "created_at": 1672531200, "updated_at": 1672531200}"#,
+            )
             .create_async()
             .await;
 

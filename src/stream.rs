@@ -26,7 +26,7 @@ impl TaskForceAI {
         let mut request = self.client.get(&url);
 
         if !self.api_key.is_empty() {
-            request = request.bearer_auth(&self.api_key);
+            request = request.header("x-api-key", &self.api_key);
         }
 
         request = request.header("Accept", "text/event-stream");
